@@ -41,15 +41,16 @@ export async function GET() {
   const fondo_unidad = total_cuotas * ratioUnidad + total_unidad_directo - gasto_unidad;
   const fondo_inscripcion = total_inscripcion - gasto_inscripcion;
 
-  // Cuotas vencidas en la temporada actual (abril–noviembre)
+  // Cuotas vencidas en la temporada configurada
+  const mesInicio = config.temporada_mes_inicio ?? 4;
+  const mesFin = config.temporada_mes_fin ?? 11;
   const now = new Date();
   const year = now.getFullYear();
-  const month = now.getMonth() + 1; // 1-12
+  const month = now.getMonth() + 1;
   let cuotas_debidas_temporada = 0;
-  if (month >= 4) {
-    for (let m = 4; m <= Math.min(month, 11); m++) {
+  if (month >= mesInicio) {
+    for (let m = mesInicio; m <= Math.min(month, mesFin); m++) {
       const lastDayOfMonth = new Date(year, m, 0).getDate();
-      // La cuota vence el último día del mes
       if (m < month || (m === month && now.getDate() >= lastDayOfMonth)) {
         cuotas_debidas_temporada++;
       }

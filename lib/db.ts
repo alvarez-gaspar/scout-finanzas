@@ -66,6 +66,9 @@ function initSchema(db: Database.Database) {
   setDefault.run('cuota_monto_abono', '10000');
   setDefault.run('cuota_monto_unidad', '5000');
   setDefault.run('cuota_inscripcion', '5000');
+  setDefault.run('temporada_mes_inicio', '4');
+  setDefault.run('temporada_mes_fin', '11');
+  setDefault.run('temporada_año', String(new Date().getFullYear()));
 }
 
 export default getDb;

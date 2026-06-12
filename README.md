@@ -33,10 +33,11 @@ Aplicación web para gestionar las finanzas de una avanzada scout. Registra pago
 - Descarga en CSV del historial de pagos
 - Descarga en CSV del historial de gastos
 
-### Configuración
+### Configuración y nuevo año
 - Monto que va al abono del pionero por cada cuota (ej: $10.000)
 - Monto que va al fondo de la unidad por cada cuota (ej: $5.000)
 - Costo de inscripción requerido por pionero
+- **Inicio de nuevo año** — wizard que borra todos los datos financieros y configura la nueva temporada (rango de meses, montos de cuota e inscripción). Los pioneros se conservan.
 
 ## Arranque rápido
 

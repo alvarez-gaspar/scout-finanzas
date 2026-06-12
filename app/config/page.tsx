@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 interface Config {
   cuota_monto_abono: string;
@@ -114,6 +115,17 @@ export default function ConfigPage() {
           <p className="text-center text-violet-700 text-sm font-medium">✓ Configuración guardada</p>
         )}
       </form>
+
+      <div className="bg-white rounded-xl border shadow-sm p-6">
+        <h2 className="font-semibold text-gray-700 mb-1">Nuevo año</h2>
+        <p className="text-xs text-gray-500 mb-4">
+          Reinicia los datos financieros para comenzar una nueva temporada. Los pioneros se conservan.
+        </p>
+        <Link href="/nuevo-ano"
+          className="inline-block w-full text-center border border-red-300 text-red-600 py-2 rounded-lg text-sm font-medium hover:bg-red-50">
+          Iniciar nuevo año →
+        </Link>
+      </div>
     </div>
   );
 }

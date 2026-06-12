@@ -60,7 +60,7 @@ export async function GET() {
   // Scouts: saldo abono = ingresos cuotas (abono) - gastos abono de ese scout
   const scouts = db.prepare(`
     SELECT
-      s.id, s.nombre, s.apellido, s.seccion,
+      s.id, s.nombre, s.apellido, s.seccion, s.fecha_nacimiento,
       COALESCE(SUM(CASE WHEN p.tipo='inscripcion' THEN p.monto END), 0) AS pagado_inscripcion,
       COALESCE(SUM(CASE WHEN p.tipo='cuota' THEN p.monto * ? END), 0)
         - COALESCE((SELECT SUM(gi.monto) FROM gasto_items gi WHERE gi.scout_id = s.id AND gi.tipo='abono'), 0)

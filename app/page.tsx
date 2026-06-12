@@ -8,7 +8,7 @@ interface ScoutResumen {
   id: number;
   nombre: string;
   apellido: string;
-  seccion: string | null;
+  fecha_nacimiento: string | null;
   pagado_inscripcion: number;
   saldo_abono: number;
   formalizado: number;
@@ -27,6 +27,18 @@ interface DashboardData {
   scouts: ScoutResumen[];
   config: Record<string, number>;
   cuotas_debidas_temporada: number;
+}
+
+function calcularEdad(fecha: string | null): string {
+  if (!fecha) return '—';
+  const hoy = new Date();
+  const nac = new Date(fecha);
+  let años = hoy.getFullYear() - nac.getFullYear();
+  let meses = hoy.getMonth() - nac.getMonth();
+  if (meses < 0 || (meses === 0 && hoy.getDate() < nac.getDate())) { años--; meses += 12; }
+  if (hoy.getDate() < nac.getDate()) { meses--; if (meses < 0) meses += 12; }
+  if (años < 0) return '—';
+  return meses > 0 ? `${años}a ${meses}m` : `${años} años`;
 }
 
 function fmt(n: number) {
@@ -158,7 +170,7 @@ export default function Dashboard() {
           <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
             <tr>
               <th className="px-4 py-2 text-left">Pionero</th>
-              <th className="px-4 py-2 text-left">Sección</th>
+              <th className="px-4 py-2 text-left">Edad</th>
               <th className="px-4 py-2 text-right">Abono</th>
               <th className="px-4 py-2 text-center">Cuotas</th>
               <th className="px-4 py-2 text-center">Inscripción</th>
@@ -174,7 +186,7 @@ export default function Dashboard() {
                       {s.apellido}, {s.nombre}
                     </Link>
                   </td>
-                  <td className="px-4 py-2 text-gray-500">{s.seccion ?? '—'}</td>
+                  <td className="px-4 py-2 text-gray-500">{calcularEdad(s.fecha_nacimiento)}</td>
                   <td className="px-4 py-2 text-right font-mono">{fmt(s.saldo_abono)}</td>
                   <td className="px-4 py-2 text-center">
                     {cuotas_debidas_temporada === 0

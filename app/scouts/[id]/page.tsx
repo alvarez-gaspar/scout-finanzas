@@ -31,6 +31,8 @@ export default function DetallePionero() {
     formalizado: number; cuotas_pagadas: number; cuotas_debidas: number;
   } | null>(null);
   const [config, setConfig] = useState<Record<string, number>>({});
+  const [confirmandoBaja, setConfirmandoBaja] = useState(false);
+  const [bajando, setBajando] = useState(false);
 
   useEffect(() => {
     fetch('/api/dashboard').then(r => r.json()).then(d => {
@@ -51,6 +53,18 @@ export default function DetallePionero() {
     if (hoy.getDate() < nac.getDate()) { meses--; if (meses < 0) meses += 12; }
     if (años < 0) return '';
     return meses > 0 ? `${años} años y ${meses} meses` : `${años} años`;
+  }
+
+  async function darDeBaja() {
+    setBajando(true);
+    const res = await fetch(`/api/scouts/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      router.push('/scouts');
+    } else {
+      alert('Error al dar de baja. Intenta de nuevo.');
+      setBajando(false);
+      setConfirmandoBaja(false);
+    }
   }
 
   if (!scout) return <p className="text-gray-500">Cargando...</p>;
@@ -76,10 +90,16 @@ export default function DetallePionero() {
             <p className="text-gray-500 text-sm mt-0.5">{calcularEdad(scout.fecha_nacimiento)}</p>
           )}
         </div>
-        <Link href={`/pagos?scout=${id}`}
-          className="bg-violet-700 text-white px-4 py-2 rounded-lg text-sm hover:bg-violet-800">
-          + Registrar Pago
-        </Link>
+        <div className="flex gap-2">
+          <Link href={`/pagos?scout=${id}`}
+            className="bg-violet-700 text-white px-4 py-2 rounded-lg text-sm hover:bg-violet-800">
+            + Registrar Pago
+          </Link>
+          <button onClick={() => setConfirmandoBaja(true)}
+            className="border border-red-300 text-red-600 px-4 py-2 rounded-lg text-sm hover:bg-red-50">
+            Dar de baja
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -101,6 +121,29 @@ export default function DetallePionero() {
           </p>
         </div>
       </div>
+
+      {confirmandoBaja && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full mx-4 space-y-4">
+            <h2 className="font-bold text-gray-800 text-lg">¿Dar de baja a {scout.nombre}?</h2>
+            <p className="text-sm text-gray-600">
+              Todo el dinero que tiene acumulado —abono
+              {!scout.formalizado ? ' e inscripción' : ''}— pasará al fondo de uso libre de la unidad.
+              Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmandoBaja(false)} disabled={bajando}
+                className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm hover:bg-gray-50">
+                Cancelar
+              </button>
+              <button onClick={darDeBaja} disabled={bajando}
+                className="flex-1 bg-red-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50">
+                {bajando ? 'Procesando...' : 'Confirmar baja'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
         <h2 className="font-semibold text-gray-700 px-5 py-4 border-b">Historial de Pagos</h2>

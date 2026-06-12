@@ -9,6 +9,8 @@ interface ScoutResumen {
   nombre: string;
   apellido: string;
   fecha_nacimiento: string | null;
+  etapa: string | null;
+  comunidad: string | null;
   pagado_inscripcion: number;
   saldo_abono: number;
   formalizado: number;
@@ -171,6 +173,8 @@ export default function Dashboard() {
             <tr>
               <th className="px-4 py-2 text-left">Pionero</th>
               <th className="px-4 py-2 text-left">Edad</th>
+              <th className="px-4 py-2 text-left">Etapa</th>
+              <th className="px-4 py-2 text-left">Comunidad</th>
               <th className="px-4 py-2 text-right">Abono</th>
               <th className="px-4 py-2 text-center">Cuotas</th>
               <th className="px-4 py-2 text-center">Inscripción</th>
@@ -187,6 +191,8 @@ export default function Dashboard() {
                     </Link>
                   </td>
                   <td className="px-4 py-2 text-gray-500">{calcularEdad(s.fecha_nacimiento)}</td>
+                  <td className="px-4 py-2 text-gray-600">{s.etapa ?? '—'}</td>
+                  <td className="px-4 py-2 text-gray-600">{s.comunidad ?? '—'}</td>
                   <td className="px-4 py-2 text-right font-mono">{fmt(s.saldo_abono)}</td>
                   <td className="px-4 py-2 text-center">
                     {cuotas_debidas_temporada === 0

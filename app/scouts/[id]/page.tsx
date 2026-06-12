@@ -12,8 +12,31 @@ interface Pago {
   comprobante_url: string | null;
 }
 
+interface ScoutData {
+  nombre: string;
+  apellido: string;
+  fecha_nacimiento: string | null;
+  etapa: string | null;
+  comunidad: string | null;
+  formalizado: number;
+  cuotas_pagadas: number;
+  cuotas_debidas: number;
+}
+
 function fmt(n: number) {
   return n.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
+}
+
+function calcularEdad(fecha: string | null): string {
+  if (!fecha) return '';
+  const hoy = new Date();
+  const nac = new Date(fecha);
+  let años = hoy.getFullYear() - nac.getFullYear();
+  let meses = hoy.getMonth() - nac.getMonth();
+  if (meses < 0 || (meses === 0 && hoy.getDate() < nac.getDate())) { años--; meses += 12; }
+  if (hoy.getDate() < nac.getDate()) { meses--; if (meses < 0) meses += 12; }
+  if (años < 0) return '';
+  return meses > 0 ? `${años} años y ${meses} meses` : `${años} años`;
 }
 
 const tipoLabel: Record<string, string> = {
@@ -26,33 +49,49 @@ export default function DetallePionero() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [pagos, setPagos] = useState<Pago[]>([]);
-  const [scout, setScout] = useState<{
-    nombre: string; apellido: string; fecha_nacimiento: string | null;
-    formalizado: number; cuotas_pagadas: number; cuotas_debidas: number;
-  } | null>(null);
+  const [scout, setScout] = useState<ScoutData | null>(null);
   const [config, setConfig] = useState<Record<string, number>>({});
   const [confirmandoBaja, setConfirmandoBaja] = useState(false);
   const [bajando, setBajando] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [form, setForm] = useState({ nombre: '', apellido: '', fecha_nacimiento: '', etapa: '', comunidad: '' });
 
-  useEffect(() => {
+  function cargarDatos() {
     fetch('/api/dashboard').then(r => r.json()).then(d => {
       const s = d.scouts.find((x: { id: number }) => x.id === parseInt(id));
-      setScout(s ?? null);
+      if (s) {
+        setScout(s);
+        setForm({
+          nombre: s.nombre ?? '',
+          apellido: s.apellido ?? '',
+          fecha_nacimiento: s.fecha_nacimiento ?? '',
+          etapa: s.etapa ?? '',
+          comunidad: s.comunidad ?? '',
+        });
+      }
       setConfig(d.config);
     });
     fetch(`/api/scouts/${id}/pagos`).then(r => r.json()).then(setPagos);
-  }, [id]);
+  }
 
-  function calcularEdad(fecha: string | null): string {
-    if (!fecha) return '';
-    const hoy = new Date();
-    const nac = new Date(fecha);
-    let años = hoy.getFullYear() - nac.getFullYear();
-    let meses = hoy.getMonth() - nac.getMonth();
-    if (meses < 0 || (meses === 0 && hoy.getDate() < nac.getDate())) { años--; meses += 12; }
-    if (hoy.getDate() < nac.getDate()) { meses--; if (meses < 0) meses += 12; }
-    if (años < 0) return '';
-    return meses > 0 ? `${años} años y ${meses} meses` : `${años} años`;
+  useEffect(() => { cargarDatos(); }, [id]);
+
+  async function guardarEdicion(e: React.FormEvent) {
+    e.preventDefault();
+    setGuardando(true);
+    const res = await fetch(`/api/scouts/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    });
+    if (res.ok) {
+      await cargarDatos();
+      setEditando(false);
+    } else {
+      alert('Error al guardar. Intenta de nuevo.');
+    }
+    setGuardando(false);
   }
 
   async function darDeBaja() {
@@ -76,21 +115,29 @@ export default function DetallePionero() {
   const ratioAbono = (montoAbono + montoUnidad) > 0 ? montoAbono / (montoAbono + montoUnidad) : 0;
   const saldoAbono = totalCuotas * ratioAbono;
   const pagaInscripcion = totalInscripcion >= (config.cuota_inscripcion ?? 5000);
-  const formalizado = !!scout?.formalizado;
+  const formalizado = !!scout.formalizado;
   const cuotasAtrasadas = Math.max(0, (scout.cuotas_debidas ?? 0) - (scout.cuotas_pagadas ?? 0));
+  const edad = calcularEdad(scout.fecha_nacimiento);
 
   return (
     <div className="space-y-6 max-w-2xl">
       <button onClick={() => router.back()} className="text-sm text-gray-500 hover:text-gray-800">← Volver</button>
 
+      {/* Encabezado */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">{scout.apellido}, {scout.nombre}</h1>
-          {calcularEdad(scout.fecha_nacimiento) && (
-            <p className="text-gray-500 text-sm mt-0.5">{calcularEdad(scout.fecha_nacimiento)}</p>
-          )}
+          <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1">
+            {edad && <p className="text-gray-500 text-sm">{edad}</p>}
+            {scout.etapa && <p className="text-sm text-violet-700 font-medium">{scout.etapa}</p>}
+            {scout.comunidad && <p className="text-sm text-gray-500">Comunidad {scout.comunidad}</p>}
+          </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap justify-end">
+          <button onClick={() => setEditando(true)}
+            className="border border-violet-300 text-violet-700 px-4 py-2 rounded-lg text-sm hover:bg-violet-50">
+            Editar datos
+          </button>
           <Link href={`/pagos?scout=${id}`}
             className="bg-violet-700 text-white px-4 py-2 rounded-lg text-sm hover:bg-violet-800">
             + Registrar Pago
@@ -102,6 +149,7 @@ export default function DetallePionero() {
         </div>
       </div>
 
+      {/* Tarjetas de estado */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <p className="text-xs text-blue-600 font-semibold uppercase">Saldo Abono</p>
@@ -122,6 +170,57 @@ export default function DetallePionero() {
         </div>
       </div>
 
+      {/* Modal edición */}
+      {editando && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-full mx-4">
+            <h2 className="font-bold text-gray-800 text-lg mb-4">Editar datos del pionero</h2>
+            <form onSubmit={guardarEdicion} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Nombre</label>
+                  <input required value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
+                    className="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Apellido</label>
+                  <input required value={form.apellido} onChange={e => setForm(f => ({ ...f, apellido: e.target.value }))}
+                    className="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Fecha de nacimiento</label>
+                <input type="date" value={form.fecha_nacimiento} onChange={e => setForm(f => ({ ...f, fecha_nacimiento: e.target.value }))}
+                  className="w-full border rounded-lg px-3 py-2 text-sm" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Etapa</label>
+                  <input value={form.etapa} onChange={e => setForm(f => ({ ...f, etapa: e.target.value }))}
+                    placeholder="ej: Pionero I" className="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Comunidad</label>
+                  <input value={form.comunidad} onChange={e => setForm(f => ({ ...f, comunidad: e.target.value }))}
+                    placeholder="ej: Los Cóndores" className="w-full border rounded-lg px-3 py-2 text-sm" />
+                </div>
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setEditando(false)} disabled={guardando}
+                  className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm hover:bg-gray-50">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={guardando}
+                  className="flex-1 bg-violet-700 text-white py-2 rounded-lg text-sm font-semibold hover:bg-violet-800 disabled:opacity-50">
+                  {guardando ? 'Guardando...' : 'Guardar cambios'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal baja */}
       {confirmandoBaja && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full mx-4 space-y-4">
@@ -145,6 +244,7 @@ export default function DetallePionero() {
         </div>
       )}
 
+      {/* Historial */}
       <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
         <h2 className="font-semibold text-gray-700 px-5 py-4 border-b">Historial de Pagos</h2>
         {pagos.length === 0

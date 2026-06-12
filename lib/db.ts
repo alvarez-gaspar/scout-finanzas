@@ -60,6 +60,8 @@ function initSchema(db: Database.Database) {
 
   // Migraciones no destructivas
   try { db.exec(`ALTER TABLE scouts ADD COLUMN fecha_nacimiento TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE scouts ADD COLUMN etapa TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE scouts ADD COLUMN comunidad TEXT`); } catch {}
 
   // Defaults de configuración
   const setDefault = db.prepare(`INSERT OR IGNORE INTO config(key,value) VALUES(?,?)`);

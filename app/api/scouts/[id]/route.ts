@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import getDb from '@/lib/db';
 
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const scoutId = parseInt(id);
+  if (isNaN(scoutId)) return NextResponse.json({ error: 'id inválido' }, { status: 400 });
+
+  const { nombre, apellido, fecha_nacimiento, etapa, comunidad } = await req.json();
+  if (!nombre || !apellido) {
+    return NextResponse.json({ error: 'nombre y apellido son requeridos' }, { status: 400 });
+  }
+
+  const db = getDb();
+  db.prepare(`
+    UPDATE scouts SET nombre=?, apellido=?, fecha_nacimiento=?, etapa=?, comunidad=? WHERE id=?
+  `).run(nombre.trim(), apellido.trim(), fecha_nacimiento?.trim() ?? null, etapa?.trim() ?? null, comunidad?.trim() ?? null, scoutId);
+
+  return NextResponse.json({ ok: true });
+}
+
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

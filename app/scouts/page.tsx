@@ -8,6 +8,8 @@ interface Scout {
   nombre: string;
   apellido: string;
   fecha_nacimiento: string | null;
+  etapa: string | null;
+  comunidad: string | null;
   total_inscripcion: number;
   saldo_abono: number;
 }
@@ -57,6 +59,8 @@ export default function PionerosPage() {
             <tr>
               <th className="px-4 py-3 text-left">Nombre</th>
               <th className="px-4 py-3 text-left">Edad</th>
+              <th className="px-4 py-3 text-left">Etapa</th>
+              <th className="px-4 py-3 text-left">Comunidad</th>
               <th className="px-4 py-3 text-right">Saldo Abono</th>
               <th className="px-4 py-3 text-center">Inscripción</th>
               <th className="px-4 py-3"></th>
@@ -67,6 +71,8 @@ export default function PionerosPage() {
               <tr key={s.id} className="border-t hover:bg-gray-50">
                 <td className="px-4 py-3 font-medium text-gray-800">{s.apellido}, {s.nombre}</td>
                 <td className="px-4 py-3 text-gray-500">{calcularEdad(s.fecha_nacimiento)}</td>
+                <td className="px-4 py-3 text-gray-600">{s.etapa ?? '—'}</td>
+                <td className="px-4 py-3 text-gray-600">{s.comunidad ?? '—'}</td>
                 <td className="px-4 py-3 text-right font-mono">{fmt(s.saldo_abono)}</td>
                 <td className="px-4 py-3 text-center">
                   {s.total_inscripcion >= parseFloat(config.cuota_inscripcion ?? '0')
@@ -79,7 +85,7 @@ export default function PionerosPage() {
               </tr>
             ))}
             {scouts.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">
                 Sin pioneros. <Link href="/scouts/nuevo" className="underline text-violet-700">Agrega el primero</Link>
               </td></tr>
             )}

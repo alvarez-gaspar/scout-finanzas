@@ -24,14 +24,14 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { nombre, apellido, fecha_nacimiento } = await req.json();
+  const { nombre, apellido, fecha_nacimiento, etapa, comunidad } = await req.json();
   if (!nombre || !apellido) {
     return NextResponse.json({ error: 'nombre y apellido son requeridos' }, { status: 400 });
   }
   const db = getDb();
   const result = db.prepare(
-    `INSERT INTO scouts(nombre, apellido, fecha_nacimiento) VALUES(?,?,?)`
-  ).run(nombre.trim(), apellido.trim(), fecha_nacimiento?.trim() ?? null);
+    `INSERT INTO scouts(nombre, apellido, fecha_nacimiento, etapa, comunidad) VALUES(?,?,?,?,?)`
+  ).run(nombre.trim(), apellido.trim(), fecha_nacimiento?.trim() ?? null, etapa?.trim() ?? null, comunidad?.trim() ?? null);
 
   const scout = db.prepare(`SELECT * FROM scouts WHERE id=?`).get(result.lastInsertRowid);
   return NextResponse.json(scout, { status: 201 });

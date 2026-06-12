@@ -7,9 +7,21 @@ interface Scout {
   id: number;
   nombre: string;
   apellido: string;
-  seccion: string | null;
+  fecha_nacimiento: string | null;
   total_inscripcion: number;
   saldo_abono: number;
+}
+
+function calcularEdad(fecha: string | null): string {
+  if (!fecha) return '—';
+  const hoy = new Date();
+  const nac = new Date(fecha);
+  let años = hoy.getFullYear() - nac.getFullYear();
+  let meses = hoy.getMonth() - nac.getMonth();
+  if (meses < 0 || (meses === 0 && hoy.getDate() < nac.getDate())) { años--; meses += 12; }
+  if (hoy.getDate() < nac.getDate()) { meses--; if (meses < 0) meses += 12; }
+  if (años < 0) return '—';
+  return meses > 0 ? `${años}a ${meses}m` : `${años} años`;
 }
 
 function fmt(n: number) {
@@ -44,7 +56,7 @@ export default function PionerosPage() {
           <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
             <tr>
               <th className="px-4 py-3 text-left">Nombre</th>
-              <th className="px-4 py-3 text-left">Sección</th>
+              <th className="px-4 py-3 text-left">Edad</th>
               <th className="px-4 py-3 text-right">Saldo Abono</th>
               <th className="px-4 py-3 text-center">Inscripción</th>
               <th className="px-4 py-3"></th>
@@ -54,7 +66,7 @@ export default function PionerosPage() {
             {scouts.map(s => (
               <tr key={s.id} className="border-t hover:bg-gray-50">
                 <td className="px-4 py-3 font-medium text-gray-800">{s.apellido}, {s.nombre}</td>
-                <td className="px-4 py-3 text-gray-500">{s.seccion ?? '—'}</td>
+                <td className="px-4 py-3 text-gray-500">{calcularEdad(s.fecha_nacimiento)}</td>
                 <td className="px-4 py-3 text-right font-mono">{fmt(s.saldo_abono)}</td>
                 <td className="px-4 py-3 text-center">
                   {s.total_inscripcion >= parseFloat(config.cuota_inscripcion ?? '0')

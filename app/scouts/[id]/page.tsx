@@ -27,7 +27,7 @@ export default function DetallePionero() {
   const router = useRouter();
   const [pagos, setPagos] = useState<Pago[]>([]);
   const [scout, setScout] = useState<{
-    nombre: string; apellido: string; seccion: string | null;
+    nombre: string; apellido: string; fecha_nacimiento: string | null;
     formalizado: number; cuotas_pagadas: number; cuotas_debidas: number;
   } | null>(null);
   const [config, setConfig] = useState<Record<string, number>>({});
@@ -40,6 +40,18 @@ export default function DetallePionero() {
     });
     fetch(`/api/scouts/${id}/pagos`).then(r => r.json()).then(setPagos);
   }, [id]);
+
+  function calcularEdad(fecha: string | null): string {
+    if (!fecha) return '';
+    const hoy = new Date();
+    const nac = new Date(fecha);
+    let años = hoy.getFullYear() - nac.getFullYear();
+    let meses = hoy.getMonth() - nac.getMonth();
+    if (meses < 0 || (meses === 0 && hoy.getDate() < nac.getDate())) { años--; meses += 12; }
+    if (hoy.getDate() < nac.getDate()) { meses--; if (meses < 0) meses += 12; }
+    if (años < 0) return '';
+    return meses > 0 ? `${años} años y ${meses} meses` : `${años} años`;
+  }
 
   if (!scout) return <p className="text-gray-500">Cargando...</p>;
 
@@ -60,7 +72,9 @@ export default function DetallePionero() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">{scout.apellido}, {scout.nombre}</h1>
-          {scout.seccion && <p className="text-gray-500 text-sm mt-0.5">Sección: {scout.seccion}</p>}
+          {calcularEdad(scout.fecha_nacimiento) && (
+            <p className="text-gray-500 text-sm mt-0.5">{calcularEdad(scout.fecha_nacimiento)}</p>
+          )}
         </div>
         <Link href={`/pagos?scout=${id}`}
           className="bg-violet-700 text-white px-4 py-2 rounded-lg text-sm hover:bg-violet-800">

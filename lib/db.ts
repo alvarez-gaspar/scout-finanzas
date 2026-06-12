@@ -58,6 +58,9 @@ function initSchema(db: Database.Database) {
     );
   `);
 
+  // Migraciones no destructivas
+  try { db.exec(`ALTER TABLE scouts ADD COLUMN fecha_nacimiento TEXT`); } catch {}
+
   // Defaults de configuración
   const setDefault = db.prepare(`INSERT OR IGNORE INTO config(key,value) VALUES(?,?)`);
   setDefault.run('cuota_monto_abono', '10000');

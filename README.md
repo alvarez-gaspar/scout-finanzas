@@ -1,16 +1,16 @@
 # Pioneros Finanzas
 
-Aplicación web para gestionar las finanzas de una unidad scout. Registra pagos y gastos, divide el dinero en fondos separados, sube comprobantes y visualiza en tiempo real el estado de cada pionero y de la unidad.
+Aplicación web para gestionar las finanzas de una avanzada scout. Registra pagos y gastos, divide el dinero en tres fondos separados, sube comprobantes y visualiza en tiempo real el estado financiero de cada pionero y de la unidad.
 
 ## Funcionalidades
 
 ### Gestión de pioneros
-- Registro de jóvenes con nombre, apellido y sección
+- Registro de jóvenes con nombre, apellido y fecha de nacimiento
+- Edad calculada automáticamente en años y meses
 - Perfil individual con historial de pagos, saldo de abono y estado de inscripción
-- Seguimiento de cuotas al día / atrasadas por pionero
 
 ### Ingresos
-- **Cuota mensual** — se divide automáticamente entre el fondo de abono del joven y el fondo de la unidad (montos configurables en pesos)
+- **Cuota mensual** — se divide automáticamente entre el fondo de abono del joven y el fondo de la unidad (montos en pesos, configurables)
 - **Inscripción** — va 100% al fondo de inscripción del joven
 - **Pago directo a la unidad** — va 100% al fondo de gastos libres
 - Cada pago admite un comprobante adjunto (imagen o PDF)
@@ -25,11 +25,11 @@ Aplicación web para gestionar las finanzas de una unidad scout. Registra pagos 
 - Saldo acumulado de abonos (suma de todos los pioneros, descontados egresos)
 - Saldo del fondo de inscripciones (descontadas formalizaciones)
 - Gráfico de evolución temporal de los tres fondos mes a mes
-- Estado de cuotas por temporada (abril–noviembre): quién está al día y quién tiene cuotas vencidas
+- **Seguimiento de cuotas por temporada (abril–noviembre):** quién está al día y cuántos meses debe cada uno
 - Estado de inscripciones: sin pagar / pagaron / formalizados
 
 ### Exportación
-- Descarga en CSV de la lista de pioneros con saldos
+- Descarga en CSV de la lista de pioneros con saldos y edades
 - Descarga en CSV del historial de pagos
 - Descarga en CSV del historial de gastos
 
@@ -41,6 +41,8 @@ Aplicación web para gestionar las finanzas de una unidad scout. Registra pagos 
 ## Arranque rápido
 
 Doble clic sobre `iniciar.command` en Finder. Abre el servidor y lanza el navegador automáticamente.
+
+La primera vez que se abre, macOS puede pedir permiso: clic derecho → Abrir → Abrir.
 
 ## Instalación manual
 
@@ -60,6 +62,12 @@ Abrir [http://localhost:3000](http://localhost:3000).
 
 La base de datos SQLite se crea sola en `data/scout.db` la primera vez. Los comprobantes subidos se guardan en `public/uploads/`. Ambas carpetas están en `.gitignore` — los datos nunca se suben al repositorio.
 
+## Notas de uso
+
+- **Los datos persisten** entre sesiones. Cerrar la terminal detiene el servidor pero no borra nada.
+- **Cuotas:** se cobran de abril a noviembre, vencen el último día de cada mes. El dashboard muestra automáticamente quién está atrasado según la fecha actual.
+- **Inscripciones:** el flujo es primero registrar el pago del joven (ingreso), y luego formalizar la inscripción ante la asociación (egreso) desde la sección Inscripciones, donde un solo comprobante puede cubrir varios pioneros.
+
 ## Estructura
 
 ```
@@ -70,16 +78,16 @@ app/
   gastos/                # Formulario e historial de egresos
   inscripciones/         # Formalización en lote de inscripciones
   config/                # Configuración de montos
-  api/                   # API routes (Next.js App Router)
-    dashboard/           # Datos del dashboard + cálculo de cuotas vencidas
+  api/
+    dashboard/           # Saldos en tiempo real + cuotas vencidas por temporada
     scouts/              # CRUD pioneros
-    pagos/               # Registro de ingresos + subida de comprobantes
+    pagos/               # Registro de ingresos + comprobantes
     gastos/              # Registro de egresos
     grafico/             # Datos históricos para el gráfico
-    export/              # Exportación CSV
-    config/              # Configuración de montos
+    export/              # Exportación CSV (scouts, pagos, gastos)
+    config/              # Lectura y escritura de configuración
 lib/
-  db.ts                  # Conexión SQLite y esquema de tablas
+  db.ts                  # Conexión SQLite, esquema de tablas y migraciones
   csv.ts                 # Generador de archivos CSV
 components/
   Nav.tsx                # Navegación principal
